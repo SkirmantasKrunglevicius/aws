@@ -35,19 +35,23 @@ for s3_object in my_bucket.objects.all():
     for version in versions.get('Versions', []):
         if not version['IsLatest']:
             last_modified = version['LastModified']
-        if last_modified == bucket_date:
-            version_id = version['VersionId']
-        else:
-            time_diff = abs((last_modified - bucket_date).total_seconds())
-            if closest_ver_diff is None or time_diff < closest_ver_diff:
-                closest_ver_diff = time_diff
-                closest_ver = version['VersionId']
-    print(f"Version ID for date {bucket_date.date()} is: {closest_ver}")
+            if last_modified == bucket_date:
+                version_id = version['VersionId']
+            else:
+                time_diff = abs((last_modified - bucket_date).total_seconds())
+                if closest_ver_diff is None or time_diff < closest_ver_diff:
+                    closest_ver_diff = time_diff
+                    closest_ver = version['VersionId']
 
     if closest_ver:
+        print(f"Version ID for file {s3_object.key} is: {closest_ver}")
         copy_source = {
           'Bucket': bucket_name,
           'Key': s3_object.key,
           'VersionId': closest_ver
         }
-    s3.meta.client.copy(copy_source, bucket_name, s3_object.key)
+        check_size = s3_client.head_object(Bucket=bucket_name, Key=s3_object.key)
+        size = check_size['ContentLength']
+        print(size)
+        if size > 0:
+            s3.meta.client.copy(copy_source, bucket_name, s3_object.key)
