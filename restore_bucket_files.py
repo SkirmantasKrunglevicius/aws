@@ -31,7 +31,8 @@ for s3_object in my_bucket.objects.all():
     )
     closest_ver = None
     closest_ver_diff = None
-    versions_count = len(versions.get('Versions', [])) + len(versions.get('DeleteMarkers', []))
+    versions_count = len(versions.get('Versions', [])) \
+        + len(versions.get('DeleteMarkers', []))
 
     if versions_count > 1:
         for version in versions.get('Versions', []):
@@ -41,13 +42,15 @@ for s3_object in my_bucket.objects.all():
                     if last_modified == bucket_date:
                         version_id = version['VersionId']
                     else:
-                        time_diff = abs((last_modified - bucket_date).total_seconds())
-                        if closest_ver_diff is None or time_diff < closest_ver_diff:
+                        time_diff = \
+                            abs((last_modified - bucket_date).total_seconds())
+                        if closest_ver_diff is None \
+                                or time_diff < closest_ver_diff:
                             closest_ver_diff = time_diff
                             closest_ver = version['VersionId']
 
         if closest_ver:
-            print(f"Restored version ID for file {s3_object.key} is: {closest_ver}")
+            print(f"Restored file {s3_object.key} to: {closest_ver}")
             copy_source = {
               'Bucket': bucket_name,
               'Key': s3_object.key,
